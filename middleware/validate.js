@@ -22,7 +22,7 @@ module.exports =function validate(params) {
           break;
         case "phoneNumber":
           result.push(
-            check("phone", "phone number is invalid")
+            check("phoneNumber", "phone number is invalid")
               .notEmpty()
               .withMessage("phone number is invalid")
           );
