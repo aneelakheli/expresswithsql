@@ -1,0 +1,152 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "test user API",
+    "description": "created by Anil Akheli",
+    "version": "1.0"
+  },
+  "produces": ["application/json"],
+  "host": "localhost:4001",
+  "basePath": "/api/v1",
+  "paths": {
+    "/user": {
+      "post": {
+        "tags": ["user"],
+        "description": "create user ",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "description": "create user object ",
+            "schema": {
+              "$ref": "#/models/Users"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/models/Users"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "New entry created successfully",
+            "schema": {
+              "$ref": "#/models/Users"
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["user"],
+        "description": "get all user data",
+        "responses": {}
+      }
+    },
+    "/user/{id}": {
+        "get": {
+          "tags": ["user"],
+          "summary": "Find user by ID",
+          "description": "Returns a single user",
+          "produces": ["application/json", "application/xml"],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "integer",
+                "format": "int64",
+                "minimum": 1
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "successful operation",
+              "schema": {
+                "$ref": "#/models/Users"
+              }
+            },
+            "404": {
+              "description": "User not found"
+            }
+          }
+        },
+        "delete": {
+          "tags": ["user"],
+          "summary": "Delete user",
+          "description": "This can only be done by the logged in user.",
+          "operationId": "delete user",
+          "produces": ["application/json", "application/xml"],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "description": "The name that needs to be deleted",
+              "required": true,
+              "type": "string"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successfully deleted."
+            },
+            "500": {
+              "description": "Something went wrong"
+            }
+          }
+        },
+        "patch": {
+          "tags": ["user"],
+          "summary": "Update user",
+          "description": "changes the mistake that are previously done",
+          "consumes": ["application/json"],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "description": "sending parameter",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "in": "body",
+              "name": "body",
+              "description": "update user",
+              "required": true,
+              "type": "string",
+              "schema": {
+                "$ref": "#/models/Users"
+              }
+            }
+          ]
+        }
+      }
+  },
+  "models": {
+    "Users": {
+      "types": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "phoneNumber": {
+          "type": "string"
+        }
+      },
+      "json": {
+        "name": "Users"
+      }
+    }
+  }
+}
