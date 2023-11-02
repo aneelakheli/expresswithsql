@@ -60,7 +60,7 @@ async function addUserController(req, res) {
   try {
     const result = await new Promise((resolve, reject) => {
       connection.query(
-        "INSERT INTO Users (name, email, phoneNumber) VALUES (? ,?, ?)",
+        "INSERT INTO Users (name, email, phoneNumbers) VALUES (? ,?, ?)",
         [name, email, phoneNumber],
         (error, result) => {
           if (error) {
