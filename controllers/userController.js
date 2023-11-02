@@ -8,7 +8,7 @@ async function getAllUserController(req, res) {
         throw err;
       }
       return res.json({
-        status: 201,
+        status: 200,
         success: true,
         data: result,
       });
@@ -49,42 +49,62 @@ async function getOneUserController(req, res) {
 
 async function addUserController(req, res) {
   const { name, email, phoneNumber } = req.body;
-  console.log(req.body);
   if (!name || !email || !phoneNumber) {
-    return res.json({
+    return res.status(401).json({
       success: false,
-      status: 401,
-      message: "name, email or phone number is missing.",
+      message: "name, email, or phone number is missing.",
     });
   }
   try {
-    const result = await new Promise((resolve, reject) => {
-      connection.query(
-        "INSERT INTO Users (name, email, phoneNumbers) VALUES (? ,?, ?)",
-        [name, email, phoneNumber],
-        (error, result) => {
-          if (error) {
-            reject(error);
-            return res.json({
-              success: false,
-              message: "invalid error",
+    // Perform a query to check if the email or phone number already exists
+    connection.query(
+      "SELECT * FROM Users WHERE email = ? OR phoneNumber = ?",
+      [email, phoneNumber],
+      (error, results) => {
+        if (error) {
+          return res.status(500).json({
+            success: false,
+            message: "Something went wrong while checking for duplicates.",
+          });
+        }
+
+        if (results.length > 0) {
+          return res.status(401).json({
+            success: false,
+            message: "email or phone number already exists",
+          });
+        }
+
+        // If no duplicates were found, proceed to insert the new user
+        connection.query(
+          "INSERT INTO Users (name, email, phoneNumber) VALUES (?, ?, ?)",
+          [name, email, phoneNumber],
+          (error, result) => {
+            if (error) {
+              return res.status(500).json({
+                success: false,
+                message: "Something went wrong while inserting the new entry.",
+              });
+            }
+
+            const insertEntry = {
+              id: result.insertId,
+              name,
+              email,
+              phoneNumber,
+            };
+            return res.status(201).json({
+              success: true,
+              data: insertEntry,
+              message: "New entry has been created successfully.",
             });
           }
-          resolve(result);
-        }
-      );
-    });
-
-    const insertEntry = { id: result.insertId, name, email, phoneNumber };
-    return res.status(201).json({
-      success: true,
-      data: insertEntry,
-      message: "New entry has been created successfully.",
-    });
+        );
+      }
+    );
   } catch (error) {
-    return res.json({
+    return res.status(500).json({
       success: false,
-      status: 500,
       message: "Something went wrong.",
     });
   }
@@ -93,19 +113,44 @@ async function addUserController(req, res) {
 async function updateUserController(req, res) {
   const { name, email, phoneNumber } = req.body;
   const { id } = req.params;
-  const updateQuery = `UPDATE Users SET name= ?, email =?, phoneNumber= ?   where id= ?`;
+  const updateQuery = `UPDATE Users SET name = ?, email = ?, phoneNumber = ? WHERE id = ?`;
+
   connection.query(
     updateQuery,
     [name, email, phoneNumber, id],
-    (error, results) => {
-      console.log(results);
+    (error, result) => {
       if (error) {
-        return error;
+        console.error(error);
+        return res.status(500).json({
+          success: false,
+          message: "Something went wrong.",
+        });
       }
-      return res.json({
-        success: true,
-        data: results,
-        status: 200,
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found.",
+        });
+      }
+
+      // Fetch the updated user data after the update
+      const selectQuery = "SELECT * FROM Users WHERE id = ?";
+      connection.query(selectQuery, [id], (selectError, selectResult) => {
+        if (selectError) {
+          console.error(selectError);
+          return res.status(500).json({
+            success: false,
+            message: "Something went wrong while fetching user data.",
+          });
+        }
+
+        const updatedUser = selectResult[0];
+        return res.status(200).json({
+          success: true,
+          data: updatedUser,
+          message: "User data updated successfully.",
+        });
       });
     }
   );
@@ -117,26 +162,28 @@ async function deleteUserController(req, res) {
     const deleteQuery = `DELETE FROM Users WHERE id= ${id}`;
     connection.query(deleteQuery, function (error, result) {
       if (error) {
-        console.log(error);
         return res.json({
           status: 401,
+          success: false, 
           message: "bad request",
         });
       } else {
         return res.json({
           status: 200,
+          success: true,
           message: "Successfully Deleted.",
         });
       }
     });
   } catch (error) {
     return res.json({
-      success: true,
+      success: false,
       status: 500,
       message: "Something went wrong",
     });
   }
 }
+
 module.exports = {
   getAllUserController,
   getOneUserController,
